@@ -10,4 +10,8 @@ router.get("/",(request, response, next)=>{
 }, alunoController.findMany);
 router.post("/", validarAluno, alunoController.create);
 
+// [COMMIT 2 - REQUISITO 2]
+// Busca um aluno pelo ID.
+router.get("/:id", alunoController.findById);
+
 module.exports = router;
