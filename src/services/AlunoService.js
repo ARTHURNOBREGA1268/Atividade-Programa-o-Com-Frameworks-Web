@@ -10,6 +10,15 @@ const AlunoNaoEncontradoError = require(
   "../errors/AlunoNaoEncontradoError",
 );
 
+// [COMMIT 3 - REQUISITO 3]
+// Exceções específicas do processo de atualização.
+const DadosAtualizacaoInvalidosError = require(
+  "../errors/DadosAtualizacaoInvalidosError",
+);
+const EmailDuplicadoError = require(
+  "../errors/EmailDuplicadoError",
+);
+
 const CAMPOS_ORDENAVEIS = [
   "id",
   "nome",
@@ -98,6 +107,56 @@ class AlunoService {
     }
 
     return aluno;
+  }
+
+  // [COMMIT 3 - REQUISITO 3]
+  // Atualiza somente nome e/ou email.
+  async update(id, dados) {
+    const dadosAtualizacao = dados ?? {};
+    const data = {};
+
+    if (dadosAtualizacao.nome !== undefined) {
+      if (
+        typeof dadosAtualizacao.nome !== "string" ||
+        !dadosAtualizacao.nome.trim()
+      ) {
+        throw new AlunoInvalidoError("Nome não pode ser vazio");
+      }
+
+      data.nome = dadosAtualizacao.nome.trim();
+    }
+
+    if (dadosAtualizacao.email !== undefined) {
+      if (
+        typeof dadosAtualizacao.email !== "string" ||
+        !dadosAtualizacao.email.trim()
+      ) {
+        throw new AlunoInvalidoError("Email não pode ser vazio");
+      }
+
+      data.email = dadosAtualizacao.email.trim();
+    }
+
+    if (Object.keys(data).length === 0) {
+      throw new DadosAtualizacaoInvalidosError();
+    }
+
+    await this.findById(id);
+
+    try {
+      return await prisma.aluno.update({
+        where: {
+          id: Number(id),
+        },
+        data,
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        throw new EmailDuplicadoError();
+      }
+
+      throw error;
+    }
   }
 }
 
